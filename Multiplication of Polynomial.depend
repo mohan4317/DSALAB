@@ -1,5 +1,185 @@
-# depslib dependency file v1.0
-1763026232 source:c:\users\student.desktop-emh6pq9\onedrive\desktop\1ga24ad043\multiplication of polynomial\main.c
-	<stdio.h>
-	<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+struct node {
+    int co;             // coefficient
+    int po;             // power (exponent)
+    struct node *addr;  // next pointer
+};
+typedef struct node *NODE;
+
+/* Insert a term at the end of the list */
+NODE insertend(NODE start, int co, int po) {
+    NODE temp = (NODE) malloc(sizeof(struct node));
+    if (!temp) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    temp->co = co;
+    temp->po = po;
+    temp->addr = NULL;
+
+    if (start == NULL) {
+        return temp;
+    }
+
+    NODE cur = start;
+    while (cur->addr != NULL)
+        cur = cur->addr;
+    cur->addr = temp;
+    return start;
+}
+
+/* Display polynomial */
+void display(NODE start) {
+    if (start == NULL) {
+        printf("Polynomial is empty.\n");
+        return;
+    }
+
+    NODE temp = start;
+    int first = 1;
+    while (temp != NULL) {
+        if (temp->co != 0) {
+            if (!first) {
+                /* print sign */
+                if (temp->co > 0) printf(" + ");
+                else printf(" - ");
+            } else {
+                if (temp->co < 0) printf("-");
+            }
+
+            int absco = (temp->co < 0) ? -temp->co : temp->co;
+            if (temp->po == 0) {
+                printf("%d", absco);
+            } else if (temp->po == 1) {
+                if (absco == 1) printf("x");
+                else printf("%dx", absco);
+            } else {
+                if (absco == 1) printf("x^%d", temp->po);
+                else printf("%dx^%d", absco, temp->po);
+            }
+            first = 0;
+        }
+        temp = temp->addr;
+    }
+    if (first) /* means all coefficients were 0 */
+        printf("0");
+    printf("\n");
+}
+
+/* Add a term to result: if same power exists, add coefficients; else append */
+NODE addterm(NODE res, int co, int po) {
+    if (co == 0) return res; /* nothing to add */
+
+    if (res == NULL) {
+        return insertend(NULL, co, po);
+    }
+
+    NODE cur = res;
+    NODE prev = NULL;
+    while (cur != NULL) {
+        if (cur->po == po) {
+            cur->co += co;
+            return res;
+        }
+        prev = cur;
+        cur = cur->addr;
+    }
+
+    /* not found: append */
+    prev->addr = (NODE) malloc(sizeof(struct node));
+    if (!prev->addr) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    prev->addr->co = co;
+    prev->addr->po = po;
+    prev->addr->addr = NULL;
+    return res;
+}
+
+/* Multiply two polynomials */
+NODE multiply(NODE poly1, NODE poly2) {
+    if (poly1 == NULL || poly2 == NULL) return NULL;
+
+    NODE p1 = poly1;
+    NODE res = NULL;
+
+    for (; p1 != NULL; p1 = p1->addr) {
+        NODE p2 = poly2;
+        for (; p2 != NULL; p2 = p2->addr) {
+            int newco = p1->co * p2->co;
+            int newpo = p1->po + p2->po;
+            res = addterm(res, newco, newpo);
+        }
+    }
+    return res;
+}
+
+/* Free linked list */
+void freetree(NODE head) {
+    NODE tmp;
+    while (head) {
+        tmp = head->addr;
+        free(head);
+        head = tmp;
+    }
+}
+
+int main(void) {
+    NODE poly1 = NULL, poly2 = NULL, poly = NULL;
+    int co, po, i, n, m;
+
+    printf("Enter number of terms of first polynomial: ");
+    if (scanf("%d", &n) != 1 || n < 0) {
+        fprintf(stderr, "Invalid input.\n");
+        return 1;
+    }
+
+    for (i = 0; i < n; i++) {
+        printf("Enter coefficient and power of term %d: ", i + 1);
+        if (scanf("%d %d", &co, &po) != 2) {
+            fprintf(stderr, "Invalid input.\n");
+            freetree(poly1);
+            return 1;
+        }
+        poly1 = insertend(poly1, co, po);
+    }
+
+    printf("\nFirst polynomial is:\n");
+    display(poly1);
+
+    printf("\nEnter number of terms of second polynomial: ");
+    if (scanf("%d", &m) != 1 || m < 0) {
+        fprintf(stderr, "Invalid input.\n");
+        freetree(poly1);
+        return 1;
+    }
+
+    for (i = 0; i < m; i++) {
+        printf("Enter coefficient and power of term %d: ", i + 1);
+        if (scanf("%d %d", &co, &po) != 2) {
+            fprintf(stderr, "Invalid input.\n");
+            freetree(poly1);
+            freetree(poly2);
+            return 1;
+        }
+        poly2 = insertend(poly2, co, po);
+    }
+
+    printf("\nSecond polynomial is:\n");
+    display(poly2);
+
+    poly = multiply(poly1, poly2);
+
+    printf("\nResultant polynomial after multiplication is:\n");
+    display(poly);
+
+    /* cleanup */
+    freetree(poly1);
+    freetree(poly2);
+    freetree(poly);
+
+    return 0;
+}

@@ -1,97 +1,73 @@
+
 #include<stdio.h>
 #include<stdlib.h>
-struct node{
-    int data;
-    struct node *left;
-    struct node *right;
-};
-typedef struct node *Node;
-Node createbst(Node root,int key){
-    Node temp,cur,prev;
-    temp=(Node)malloc(sizeof(struct node));
-    temp->data=key;
-    temp->left=NULL;
-    temp->right=NULL;
-    if(root==NULL){
-        return temp;
-    }
-    cur=root;
-    prev=NULL;
-    while(cur!=NULL){
-        prev=cur;
-        if(key<cur->data){
-            cur=cur->left;
+
+void heapify(int a[10],int n){
+    int i,k,v,j,flag=0;
+    for(i=n/2;i>=1;i--){
+        k=i;
+        v=a[k];
+        while(!flag && 2*k<=n){
+            j=2*k;
+            if(j<n){
+                if(a[j]<a[j+1]){
+                    j+=1;
+                }
+            }
+            if(v>=a[j]){
+                flag=1;
+            }
+            else{
+                a[k]=a[j];
+                k=j;
+            }
         }
-        else{
-            cur=cur->right;
-        }
-    }
-    if(key<prev->data){
-        prev->left=temp;
-    }
-    else{
-        prev->right=temp;
-    }
-    return root;
-}
-
-void preorder(Node root){
-    if(root!=NULL){
-        printf("%d ",root->data);
-        preorder(root->left);
-        preorder(root->right);
-    }
-}
-
-void inorder(Node root){
-    if(root!=NULL){
-        inorder(root->left);
-        printf("%d ",root->data);
-        inorder(root->right);
-    }
-}
-
-void postorder(Node root){
-    if(root!=NULL){
-        postorder(root->left);
-        postorder(root->right);
-        printf("%d ",root->data);
+        a[k]=v;
+        flag=0;
     }
 }
 
 int main(){
-    Node root=NULL;
-    int choice,key;
+    int n,a[10],i,ch;
     for(;;){
-        printf("\n1. Insert\n2. Preorder\n3. Inorder\n4. Postorder\n5. Exit\n");
-        printf("Enter your choice: ");
-        scanf("%d",&choice);
-        switch(choice){
-            case 1:
-                printf("Enter key to insert: ");
-                scanf("%d",&key);
-                root=createbst(root,key);
+        printf("\n1.Create Heap\n2.Extract Heap\n3.Exit");
+        printf("\nRead choice: ");
+        scanf("%d",&ch);
+        switch(ch){
+            case 1:{
+                printf("\nRead number of elements: ");
+                scanf("%d",&n);
+                printf("\nRead elements\n");
+                for(i=1;i<=n;i++){
+                    scanf("%d",&a[i]);
+                }
+                heapify(a,n);
+                printf("\nElements after constructing heap\n");
+                for(i=1;i<=n;i++){
+                    printf("%d\t",a[i]);
+                }
                 break;
-            case 2:
-                printf("Preorder traversal: ");
-                preorder(root);
-                printf("\n");
+            }
+            case 2:{
+                if(n>=1){
+                    printf("\nKey extracted is %d",a[1]);
+                    a[1]=a[n];
+                    n-=1;
+                    heapify(a,n);
+                    printf("\nHeap after extraction\n");
+                    for(i=1;i<=n;i++){
+                        printf("%d\t",a[i]);
+                    }
+                }
+                else{
+                    printf("\nNo element to extract");
+                }
                 break;
-            case 3:
-                printf("Inorder traversal: ");
-                inorder(root);
-                printf("\n");
-                break;
-            case 4:
-                printf("Postorder traversal: ");
-                postorder(root);
-                printf("\n");
-                break;
-            case 5:
-                exit(0);
+            }
             default:
-                printf("Invalid choice!\n");
+                exit(0);
         }
     }
     return 0;
 }
+
